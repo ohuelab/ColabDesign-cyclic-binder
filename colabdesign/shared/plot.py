@@ -311,4 +311,5 @@ def make_animation(seq, con=None, xyz=None, plddt=None, pae=None,
   # make animation!
   ani = animation.ArtistAnimation(fig, ims, blit=True, interval=interval)
   plt.close()
-  return ani.to_html5_video()
+  # for saving mp4
+  return ani
