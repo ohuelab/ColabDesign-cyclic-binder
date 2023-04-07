@@ -31,7 +31,6 @@ class RunModel:
   def __init__(self,
                config: ml_collections.ConfigDict,
                params: Optional[Mapping[str, Mapping[str, np.ndarray]]] = None,
-               is_training=True,
                return_representations=True,
                recycle_mode=None,
                use_multimer=False):
@@ -49,7 +48,6 @@ class RunModel:
         model = modules.AlphaFold(self.config.model)
       return model(
           batch,
-          is_training=is_training,
           return_representations=return_representations)
     
     self.init = jax.jit(hk.transform(_forward_fn).init)
@@ -62,10 +60,9 @@ class RunModel:
       else:
         L = feat['aatype'].shape[0]
         prev = {'prev_msa_first_row': np.zeros([L,256]),
-                'prev_pair': np.zeros([L,L,128])}
-        if self.config.model.use_struct:
-          prev['prev_pos'] = np.zeros([L,37,3])
-        else:
+                'prev_pair': np.zeros([L,L,128]),
+                'prev_pos': np.zeros([L,37,3])}
+        if self.config.global_config.use_dgram:
           prev['prev_dgram'] = np.zeros([L,L,64])
         feat["prev"] = prev
 

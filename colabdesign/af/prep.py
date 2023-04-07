@@ -41,7 +41,10 @@ class _af_prep:
 
   def _prep_fixbb(self, pdb_filename, chain=None,
                   copies=1, repeat=False, homooligomer=False,
-                  rm_template_seq=True, rm_template_sc=True, rm_template_ic=False,
+                  rm_template=False,
+                  rm_template_seq=True,
+                  rm_template_sc=True,
+                  rm_template_ic=False,
                   fix_pos=None, ignore_missing=True, **kwargs):
     '''
     prep inputs for fixed backbone design
@@ -113,8 +116,9 @@ class _af_prep:
 
     # configure template [opt]ions
     rm,L = {},sum(self._lengths)
-    for n,x in [["rm_template_seq",rm_template_seq],
-                ["rm_template_sc", rm_template_sc]]:
+    for n,x in {"rm_template":    rm_template,
+                "rm_template_seq":rm_template_seq,
+                "rm_template_sc": rm_template_sc}.items():
       rm[n] = np.full(L,False)
       if isinstance(x,str):
         rm[n][prep_pos(x,**self._pdb["idx"])["pos"]] = True
@@ -151,10 +155,12 @@ class _af_prep:
       if repeat:
         offset = 1
         self._lengths = [self._len * copies]
+        self._args["repeat"] = True
       else:
         offset = 50
         self._lengths = [self._len] * copies
         self.opt["weights"].update({"i_pae":0.0, "i_con":1.0})
+        self._args["homooligomer"] = True
       res_idx = repeat_idx(np.arange(length), copies, offset=offset)
     else:
       self._lengths = [self._len]
@@ -167,12 +173,19 @@ class _af_prep:
 
     self._prep_model(**kwargs)
 
-  def _prep_binder(self, pdb_filename, chain="A",
-                   binder_len=50, binder_chain=None,
+  def _prep_binder(self, pdb_filename,
+                   target_chain="A", binder_len=50,                                         
+                   rm_target = False,
+                   rm_target_seq = False,
+                   rm_target_sc = False,
+                   
+                   # if binder_chain is defined
+                   binder_chain=None,
+                   rm_binder=True,
+                   rm_binder_seq=True,
+                   rm_binder_sc=True,
                    rm_template_ic=False,
-                   use_binder_template=False, 
-                   rm_binder_seq=True, rm_binder_sc=True,
-                   rm_target_seq=False,rm_target_sc=False,
+                                      
                    hotspot=None, ignore_missing=True, **kwargs):
     '''
     prep inputs for binder design
@@ -187,26 +200,29 @@ class _af_prep:
     -ignore_missing=True - skip positions that have missing density (no CA coordinate)
     ---------------------------------------------------
     '''
-    
     redesign = binder_chain is not None
+    rm_binder = not kwargs.pop("use_binder_template", not rm_binder)
     
     self._args.update({"redesign":redesign})
 
     # get pdb info
-    chains = f"{chain},{binder_chain}" if redesign else chain
-    im = [True] * len(chain.split(",")) 
+    target_chain = kwargs.pop("chain",target_chain) # backward comp
+    chains = f"{target_chain},{binder_chain}" if redesign else target_chain
+    im = [True] * len(target_chain.split(",")) 
     if redesign: im += [ignore_missing] * len(binder_chain.split(","))
 
     self._pdb = prep_pdb(pdb_filename, chain=chains, ignore_missing=im)
     res_idx = self._pdb["residue_index"]
 
     if redesign:
-      self._target_len = sum([(self._pdb["idx"]["chain"] == c).sum() for c in chain.split(",")])
-      self._binder_len = self._len = sum([(self._pdb["idx"]["chain"] == c).sum() for c in binder_chain.split(",")])
+      self._target_len = sum([(self._pdb["idx"]["chain"] == c).sum() for c in target_chain.split(",")])
+      self._binder_len = sum([(self._pdb["idx"]["chain"] == c).sum() for c in binder_chain.split(",")])
     else:
       self._target_len = self._pdb["residue_index"].shape[0]
-      self._binder_len = self._len = binder_len
+      self._binder_len = binder_len
       res_idx = np.append(res_idx, res_idx[-1] + np.arange(binder_len) + 50)
+    
+    self._len = self._binder_len
     self._lengths = [self._target_len, self._binder_len]
 
     # gather hotspot info
@@ -231,8 +247,11 @@ class _af_prep:
 
     # configure template rm masks
     (T,L,rm) = (self._lengths[0],sum(self._lengths),{})
-    rm_opt = {"rm_template_seq":{"target":rm_target_seq,"binder":rm_binder_seq},
-              "rm_template_sc": {"target":rm_target_sc, "binder":rm_binder_sc}}
+    rm_opt = {
+              "rm_template":    {"target":rm_target,    "binder":rm_binder},
+              "rm_template_seq":{"target":rm_target_seq,"binder":rm_binder_seq},
+              "rm_template_sc": {"target":rm_target_sc, "binder":rm_binder_sc}
+             }
     for n,x in rm_opt.items():
       rm[n] = np.full(L,False)
       for m,y in x.items():
@@ -243,8 +262,7 @@ class _af_prep:
           if m == "binder": rm[n][T:] = y
         
     # set template [opt]ions
-    template_dropout = 0.0 if use_binder_template else 1.0
-    self.opt["template"].update({"rm_ic":rm_template_ic, "dropout":template_dropout})
+    self.opt["template"]["rm_ic"] = rm_template_ic
     self._inputs.update(rm)
 
     self._prep_model(**kwargs)
@@ -252,7 +270,10 @@ class _af_prep:
   def _prep_partial(self, pdb_filename, chain=None, length=None,
                     copies=1, repeat=False, homooligomer=False,
                     pos=None, fix_pos=None, use_sidechains=False, atoms_to_exclude=None,
-                    rm_template_seq=False, rm_template_sc=False, rm_template_ic=False, 
+                    rm_template=False,
+                    rm_template_seq=False,
+                    rm_template_sc=False,
+                    rm_template_ic=False, 
                     ignore_missing=True, **kwargs):
     '''
     prep input for partial hallucination
@@ -352,8 +373,9 @@ class _af_prep:
       self._wt_aatype_sub = self._wt_aatype
 
     self.opt["template"].update({"rm_ic":rm_template_ic})
-    self._inputs.update({"rm_template_seq":rm_template_seq,
-                         "rm_template_sc":rm_template_sc})
+    self._inputs.update({"rm_template":     rm_template,
+                         "rm_template_seq": rm_template_seq,
+                         "rm_template_sc":  rm_template_sc})
   
     self._prep_model(**kwargs)
 
@@ -406,14 +428,19 @@ def prep_pdb(pdb_filename, chain=None,
     batch["all_atom_mask"][...,cb] = (m[:,cb] + cb_mask) > 0
     return {"atoms":batch["all_atom_positions"][:,cb],"mask":cb_mask}
 
-  # go through each defined chain
-  chains = [None] if chain is None else chain.split(",")
+  if isinstance(chain,str) and "," in chain:
+    chains = chain.split(",")
+  elif not isinstance(chain,list):
+    chains = [chain]
+
   o,last = [],0
   residue_idx, chain_idx = [],[]
   full_lengths = []
 
+  # go through each defined chain  
   for n,chain in enumerate(chains):
-    protein_obj = protein.from_pdb_string(pdb_to_string(pdb_filename), chain_id=chain)
+    pdb_str = pdb_to_string(pdb_filename, chains=chain, models=[1])
+    protein_obj = protein.from_pdb_string(pdb_str, chain_id=chain)
     batch = {'aatype': protein_obj.aatype,
              'all_atom_positions': protein_obj.atom_positions,
              'all_atom_mask': protein_obj.atom_mask,
@@ -530,6 +557,7 @@ def prep_input_features(L, N=1, T=1, eN=1):
   return dictionary of blank features
   '''
   inputs = {'aatype': np.zeros(L,int),
+            'target_feat': np.zeros((L,20)),
             'msa_feat': np.zeros((N,L,49)),
             # 23 = one_hot -> (20, UNK, GAP, MASK)
             # 1  = has deletion

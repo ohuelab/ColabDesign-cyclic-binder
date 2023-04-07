@@ -1,6 +1,6 @@
-# AfDesign (v1.1.0)
+# AfDesign (v1.1.1)
 ### Google Colab
-<a href="https://colab.research.google.com/github/sokrypton/ColabDesign/blob/v1.1.0/af/design.ipynb">
+<a href="https://colab.research.google.com/github/sokrypton/ColabDesign/blob/v1.1.1/af/design.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
@@ -18,19 +18,28 @@
     - The pre_callback function can be used to modify inputs before prediction, loss_callback to add cutstom loss.
   - adding support for [Optax optimizers](#optax-optimizers)
 - **24Sept2022** - v1.0.9
-  - adding [contrib section](https://github.com/sokrypton/ColabDesign/tree/v1.1.0/af/contrib) where user contributed modifications and protocols will go.
+  - adding [contrib section](https://github.com/sokrypton/ColabDesign/tree/v1.1.1/af/contrib) where user contributed modifications and protocols will go.
 - **15Oct2022** - v1.1.0
   - integrating proteinMPNN!
   - bugfix for sidechain loss
 - **17Nov2022**
-  - updating pae/plddt loss calculation to be consistent with pae/plddt outputs  
+  - updating pae/plddt loss calculation to be consistent with pae/plddt outputs
+- **24Dec2022** - v1.1.1
+  - adding af_pseudo_diffusion examples
+  - updating to alphafold-multimer v2.3.0
+  - enabling fused_triangle_multiplication by default
 ### setup
+first install jax (with GPU support)
 ```bash
-pip install git+https://github.com/sokrypton/ColabDesign.git@v1.1.0
+pip install "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+```
+second install colabdesign
+```bash
+pip install git+https://github.com/sokrypton/ColabDesign.git@v1.1.1
 
 # download alphafold weights
 mkdir params
-curl -fsSL https://storage.googleapis.com/alphafold/alphafold_params_2022-03-02.tar | tar x -C params
+curl -fsSL https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar | tar x -C params
 ```
 By default `mk_afdesign_model()` assumes alphafold "params" are saved in the run directory (`data_dir="."`). To override:
 ```python

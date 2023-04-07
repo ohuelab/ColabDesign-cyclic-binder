@@ -139,12 +139,14 @@ CONFIG = ml_collections.ConfigDict({
                 'asym_id': [NUM_RES],
                 'sym_id': [NUM_RES],
                 'entity_id': [NUM_RES],
+                
                 # extras
                 'prev_pos': [NUM_RES, None, None],
                 'prev_pair': [NUM_RES, NUM_RES, None],
                 'prev_msa_first_row': [NUM_RES, None],
+                'rm_template':     [NUM_RES],
                 'rm_template_seq': [NUM_RES],
-                'rm_template_sc': [NUM_RES]
+                'rm_template_sc':  [NUM_RES]
             },
         },
     },
@@ -199,14 +201,16 @@ CONFIG = ml_collections.ConfigDict({
                     'equation': 'ikc,jkc->ijc',
                     'num_intermediate_channel': 128,
                     'orientation': 'per_row',
-                    'shared_dropout': True
+                    'shared_dropout': True,
+                    'fuse_projection_weights': True,
                 },
                 'triangle_multiplication_incoming': {
                     'dropout_rate': 0.25,
                     'equation': 'kjc,kic->ijc',
                     'num_intermediate_channel': 128,
                     'orientation': 'per_row',
-                    'shared_dropout': True
+                    'shared_dropout': True,
+                    'fuse_projection_weights': True,
                 },
                 'pair_transition': {
                     'dropout_rate': 0.0,
@@ -275,14 +279,16 @@ CONFIG = ml_collections.ConfigDict({
                         'equation': 'ikc,jkc->ijc',
                         'num_intermediate_channel': 64,
                         'orientation': 'per_row',
-                        'shared_dropout': True
+                        'shared_dropout': True,
+                        'fuse_projection_weights': True,
                     },
                     'triangle_multiplication_incoming': {
                         'dropout_rate': 0.25,
                         'equation': 'kjc,kic->ijc',
                         'num_intermediate_channel': 64,
                         'orientation': 'per_row',
-                        'shared_dropout': True
+                        'shared_dropout': True,
+                        'fuse_projection_weights': True,
                     },
                     'pair_transition': {
                         'dropout_rate': 0.0,
@@ -296,7 +302,8 @@ CONFIG = ml_collections.ConfigDict({
             }
         },
         'global_config': {
-            'deterministic': False,
+            'bfloat16': True,
+            'bfloat16_output': False,
             'multimer_mode': False,
             'subbatch_size': 4,
             'use_remat': False,
@@ -372,8 +379,7 @@ CONFIG = ml_collections.ConfigDict({
                 'weight': 2.0
             },
         },
-        'num_recycle': 3,
-        'use_struct': True,
+        'num_recycle': 3
     },
 })
 
@@ -435,14 +441,16 @@ CONFIG_MULTIMER = ml_collections.ConfigDict({
                     'equation': 'kjc,kic->ijc',
                     'num_intermediate_channel': 128,
                     'orientation': 'per_row',
-                    'shared_dropout': True
+                    'shared_dropout': True,
+                    'fuse_projection_weights': True
                 },
                 'triangle_multiplication_outgoing': {
                     'dropout_rate': 0.25,
                     'equation': 'ikc,jkc->ijc',
                     'num_intermediate_channel': 128,
                     'orientation': 'per_row',
-                    'shared_dropout': True
+                    'shared_dropout': True,
+                    'fuse_projection_weights': True
                 }
             },
             'extra_msa_channel': 64,
@@ -507,24 +515,28 @@ CONFIG_MULTIMER = ml_collections.ConfigDict({
                         'equation': 'kjc,kic->ijc',
                         'num_intermediate_channel': 64,
                         'orientation': 'per_row',
-                        'shared_dropout': True
+                        'shared_dropout': True,
+                        'fuse_projection_weights': True,
                     },
                     'triangle_multiplication_outgoing': {
                         'dropout_rate': 0.25,
                         'equation': 'ikc,jkc->ijc',
                         'num_intermediate_channel': 64,
                         'orientation': 'per_row',
-                        'shared_dropout': True
+                        'shared_dropout': True,
+                        'fuse_projection_weights': True,
                     }
                 }
             },
         },
         'global_config': {
-            'deterministic': False,
+            'bfloat16': True,
+            'bfloat16_output': False,
             'multimer_mode': True,
             'subbatch_size': 4,
             'use_remat': False,
-            'zero_init': True
+            'zero_init': True,
+            'use_dgram': False
         },
         'heads': {
             'distogram': {
