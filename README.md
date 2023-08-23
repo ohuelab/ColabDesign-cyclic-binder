@@ -23,3 +23,7 @@ Cyclic peptide complex offset is an offset for structure prediction and hallucin
 
 Example of relative position encoding of a hypothetical 20-residue protein and a 10-residue peptide. Default complex offset on the left and cyclic peptide complex offset on the right.
 ![flowchart](img/offset.png)
+
+## References
+
+Kosugi, T.; Ohue, M. [ Design of Cyclic Peptides Targeting Protein-Protein Interactions Using AlphaFold ](https://www.biorxiv.org/content/10.1101/2023.08.20.554056) _bioRxiv_ 2023, doi:10.1101/2023.08.20.554056.
