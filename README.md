@@ -26,4 +26,6 @@ Example of relative position encoding of a hypothetical 20-residue protein and a
 
 ## References
 
+Kosugi, T.; Ohue, M. [ Design of Cyclic Peptides Targeting Protein–Protein Interactions Using AlphaFold ](https://www.mdpi.com/1422-0067/24/17/13257) _Int. J. Mol. Sci._ 2023, 24, 13257. doi:10.3390/ijms241713257
+
 Kosugi, T.; Ohue, M. [ Design of Cyclic Peptides Targeting Protein-Protein Interactions Using AlphaFold ](https://www.biorxiv.org/content/10.1101/2023.08.20.554056) _bioRxiv_ 2023, doi:10.1101/2023.08.20.554056.
